@@ -27,12 +27,14 @@ find_package(GLEW REQUIRED)
 include_directories(${GLEW_INCLUDE_DIRS})
 link_directories(${GLEW_LIBRARY_DIRS})
 
-SET(Eigen_DIR /usr/include/eigen3 /usr/local/include/eigen3 ${CMAKE_SOURCE_DIR}/ext/eigen3)
-include_directories(${Eigen_DIR})
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADER} ${VERTEXSHADER} ${FRAGMENTSHADER})
 target_link_libraries (${PROJECT_NAME}  IL ${GLEW_LIBRARY} GL glfw2 ${ASSIMP_LIBRARIES} boost_system GLU)
 ENDIF()
+
+SET(Eigen_DIR /usr/include/eigen3 /usr/local/include/eigen3 ${CMAKE_SOURCE_DIR}/ext/eigen3)
+
+include_directories(${Eigen_DIR})
 
 
 IF(APPLE)
