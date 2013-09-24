@@ -68,9 +68,9 @@ IF(APPLE)
    set_target_properties( devil PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/MacLibs/libIL.1.dylib )
 
    		
-   target_link_libraries(AnSim assimp)
-   target_link_libraries(AnSim devil)
+   target_link_libraries(ShipRace assimp)
+   target_link_libraries(ShipRace devil)
    
     set(EXT_LIBS ${CMAKE_SOURCE_DIR}/MacLibs)
-    target_link_libraries(AnSim ${EXTRA_LIBS})
+    target_link_libraries(ShipRace ${EXTRA_LIBS})
 endif()
