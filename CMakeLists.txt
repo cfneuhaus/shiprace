@@ -7,12 +7,10 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 INCLUDE_DIRECTORIES (${CMAKE_SOURCE_DIR}/ext)
 #file(GLOB_RECURSE SOURCES ${CMAKE_SOURCE_DIR}/*.cpp)
 #file(GLOB_RECURSE HEADER ${CMAKE_SOURCE_DIR}/*.h)
-set(SOURCES main.cpp Camera.cpp Water.cpp GerstnerWater.cpp Mesh.cpp Renderer.cpp Entity.cpp BuoyantEntity.cpp Shader.cpp Sky.cpp)
-set(HEADER Camera.h Water.h GerstnerWater.h Mesh.h Renderer.h Entity.h BuoyantEntity.h Shader.h Sky.h)
+set(SOURCES main.cpp Camera.cpp Water.cpp GerstnerWater.cpp Mesh.cpp Renderer.cpp Entity.cpp BuoyantEntity.cpp Sky.cpp Shader.cpp)
+set(HEADER Camera.h Water.h GerstnerWater.h Mesh.h Renderer.h Entity.h BuoyantEntity.h Sky.h Shader.h)
 file(GLOB_RECURSE VERTEXSHADER ./Shader/*.vert)
 file(GLOB_RECURSE FRAGMENTSHADER ./Shader/*.frag)
-
-if (NOT APPLE)
 
 find_package(assimp REQUIRED)
 include_directories(${ASSIMP_INCLUDE_DIRS})
@@ -27,19 +25,12 @@ find_package(GLEW REQUIRED)
 include_directories(${GLEW_INCLUDE_DIRS})
 link_directories(${GLEW_LIBRARY_DIRS})
 
-
-ENDIF()
-
 SET(Eigen_DIR /usr/include/eigen3 /usr/local/include/eigen3 ${CMAKE_SOURCE_DIR}/ext/eigen3)
-
 include_directories(${Eigen_DIR})
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADER} ${VERTEXSHADER} ${FRAGMENTSHADER})
-
-
-if(NOT APPLE)
 target_link_libraries (${PROJECT_NAME}  IL ${GLEW_LIBRARY} GL glfw2 ${ASSIMP_LIBRARIES} boost_system GLU)
-ENDIF()
+
 
 
 IF(APPLE)
@@ -73,9 +64,9 @@ IF(APPLE)
    set_target_properties( devil PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/MacLibs/libIL.1.dylib )
 
    		
-   target_link_libraries(ShipRace assimp)
-   target_link_libraries(ShipRace devil)
+   target_link_libraries(AnSim assimp)
+   target_link_libraries(AnSim devil)
    
     set(EXT_LIBS ${CMAKE_SOURCE_DIR}/MacLibs)
-    target_link_libraries(ShipRace ${EXTRA_LIBS})
+    target_link_libraries(AnSim ${EXTRA_LIBS})
 endif()
