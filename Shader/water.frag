@@ -5,6 +5,7 @@ uniform sampler2D stars;
 
 
 uniform sampler2D detailWaves;
+uniform sampler2D detailWaves2;
 
 uniform float time;
 
@@ -26,7 +27,7 @@ void main()
 {
     vec3 view=normalize(vertex-eyePos);
     vec3 detailN1 = texture2D(detailWaves,vertex.xy/12.0+time/10.0*vec2(0.4,-0.2)).xyz;
-    vec3 detailN2 = texture2D(detailWaves,vertex.xy/15.0+time/12.0*vec2(0.1,0.3)).xyz;
+    vec3 detailN2 = texture2D(detailWaves2,vertex.xy/15.0+time/12.0*vec2(0.1,0.3)).xyz;
     vec3 N=normal;
     N.xy+=abs(view.z)*(detailN1.xy+detailN2.xy);
     N = normalize(N);

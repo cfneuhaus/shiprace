@@ -42,6 +42,7 @@ protected:
 	GLuint tex_sky;
 	GLuint tex_stars;
 	GLuint tex_detailWaves;
+	GLuint tex_detailWaves2;
 
 
 	const Sky* reflectedSky_;

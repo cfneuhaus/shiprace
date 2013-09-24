@@ -25,7 +25,9 @@ Water::Water(int surfaceSize, double sizePerCell)
 
 	tex_stars=loadTexture("Shader/stars2.png");
 
-	tex_detailWaves=loadTexture("Shader/waves_n.png",GL_REPEAT);
+	//tex_detailWaves=loadTexture("Shader/waves_n.png",GL_REPEAT);
+	tex_detailWaves=loadTexture("Shader/waves_n2.jpg",GL_REPEAT);
+	tex_detailWaves2=loadTexture("Shader/waves_n3.jpg",GL_REPEAT);
 
 }
 //-----------------------------------------------------------------------------
@@ -146,6 +148,8 @@ void Water::render(const Camera& cam)
 		glUniform1iARB(loc, 2);
 	if ((loc = glGetUniformLocationARB(shader_->handle(), "detailWaves")) >= 0)
 		glUniform1iARB(loc, 3);
+	if ((loc = glGetUniformLocationARB(shader_->handle(), "detailWaves2")) >= 0)
+		glUniform1iARB(loc, 4);
 
 	glActiveTexture( GL_TEXTURE0 );
 	glEnable(GL_TEXTURE_2D);
@@ -159,6 +163,9 @@ void Water::render(const Camera& cam)
 	glActiveTexture( GL_TEXTURE3 );
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, tex_detailWaves);
+	glActiveTexture( GL_TEXTURE4 );
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, tex_detailWaves2);
 
 	const Eigen::Vector3d sunPos=reflectedSky_->getSunPos();
 
@@ -198,6 +205,8 @@ void Water::render(const Camera& cam)
 
 	glUseProgram(0);
 
+	glActiveTexture( GL_TEXTURE4 );
+	glDisable(GL_TEXTURE_2D);
 	glActiveTexture( GL_TEXTURE3 );
 	glDisable(GL_TEXTURE_2D);
 	glActiveTexture( GL_TEXTURE2 );
