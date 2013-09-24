@@ -12,6 +12,8 @@ set(HEADER Camera.h Water.h GerstnerWater.h Mesh.h Renderer.h Entity.h BuoyantEn
 file(GLOB_RECURSE VERTEXSHADER ./Shader/*.vert)
 file(GLOB_RECURSE FRAGMENTSHADER ./Shader/*.frag)
 
+if (NOT APPLE)
+
 find_package(assimp REQUIRED)
 include_directories(${ASSIMP_INCLUDE_DIRS})
 link_directories(${ASSIMP_LIBRARY_DIRS})
@@ -30,7 +32,7 @@ include_directories(${Eigen_DIR})
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADER} ${VERTEXSHADER} ${FRAGMENTSHADER})
 target_link_libraries (${PROJECT_NAME}  IL ${GLEW_LIBRARY} GL glfw2 ${ASSIMP_LIBRARIES} boost_system GLU)
-
+ENDIF()
 
 
 IF(APPLE)
