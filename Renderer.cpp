@@ -76,6 +76,7 @@ void Renderer::init()
 	Eigen::Matrix4d pre=Eigen::Matrix4d::Zero();
 	pre(1,0)=1;	pre(0,2)=-1;	pre(2,1)=1;
 	pre/=100;	pre(3,3)=1;
+	pre(2,3)=0.3;
 
 	ship_.reset(new BuoyantEntity("Assets/Mesh/black_pearl.obj",pre));
 	ship_->setCollisionModel(50,2);
@@ -219,10 +220,14 @@ void Renderer::render()
 	water_->render(cam_);
 	//glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 
+	ship_->setSunPos(sky_->getSunPos());
 	ship_->render();
 
 	for (size_t i=0;i<buoys_.size();i++)
+	{
+		buoys_[i]->setSunPos(sky_->getSunPos());
 		buoys_[i]->render();
+	}
 }
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------

@@ -17,6 +17,7 @@ Entity::Entity(const std::string& objectName, const Eigen::Matrix4d& preTransfor
 	model_->LoadMesh(objectName);
 
 	shader_.reset(new Shader("Shader/ppl.vert","Shader/ppl.frag"));
+	sunPos_<<0,0,1;
 }
 //-----------------------------------------------------------------------------
 void Entity::setCollisionModel(double mass, double radius)
@@ -41,8 +42,6 @@ void Entity::render()
 {
 	glUseProgram(shader_->handle());
 
-	Eigen::Vector3d sunPos_;
-	sunPos_ << 0.1,0,0.9;
 	int loc;
 	if ((loc = glGetUniformLocationARB(shader_->handle(),"lightPos")) >= 0)
 		glUniform3fARB(loc, sunPos_.x(),sunPos_.y(),sunPos_.z());

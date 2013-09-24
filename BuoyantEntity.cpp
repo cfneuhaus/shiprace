@@ -1,6 +1,32 @@
 #include "BuoyantEntity.h"
 #include "Water.h"
 
+#include <iostream>
+
+void render_coordinateAxes(double size)
+{
+	glEnable(GL_LINE_SMOOTH);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glLineWidth(2.5);
+	glColor3f(0, 1, 0);
+	glBegin(GL_LINES);
+	glVertex3f(0, 0, 0);
+	glVertex3f(0, size, 0);
+	glColor3f(1, 0, 0);
+	glVertex3f(0, 0, 0);
+	glVertex3f(size, 0, 0);
+	glColor3f(0, 0, 1);
+	glVertex3f(0, 0, 0);
+	glVertex3f(0, 0, size);
+	glEnd();
+	glLineWidth(1);
+
+	glDisable(GL_BLEND);
+	glDisable(GL_LINE_SMOOTH);
+}
+
 //-----------------------------------------------------------------------------
 BuoyantEntity::BuoyantEntity(const std::string& objectName, const Eigen::Matrix4d& preTransform)
 	: Entity(objectName,preTransform)
@@ -23,11 +49,15 @@ void BuoyantEntity::render()
 {
 	glUseProgram(shader_->handle());
 
-	Eigen::Vector3d sunPos_;
-	sunPos_ << 0.1,0,0.9;
+	Eigen::Matrix4d tmp=transform_*bobbingTransform_*preTransform_;
+	Eigen::Matrix4d invT=tmp.inverse();
+	Eigen::Vector4d sunW;
+	sunW<< sunPos_,0.0;
+	sunW=invT*sunW;
 	int loc;
 	if ((loc = glGetUniformLocationARB(shader_->handle(),"lightPos")) >= 0)
-		glUniform3fARB(loc, sunPos_.x(),sunPos_.y(),sunPos_.z());
+		glUniform3fARB(loc, sunW.x(),sunW.y(),sunW.z());
+
 
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();

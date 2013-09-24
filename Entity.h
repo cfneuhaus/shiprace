@@ -28,6 +28,8 @@ public:
 	void forwards(double amount);
 	void rotate(double angle, const Eigen::Vector3d& axis);
 
+	void setSunPos(const Eigen::Vector3d& sunPos) { sunPos_=sunPos; }
+
 protected:
 	double coll_mass_;
 	double coll_radius_;
@@ -39,6 +41,7 @@ protected:
 	std::unique_ptr<Mesh> model_;
 
 	std::unique_ptr<Shader> shader_;
+	Eigen::Matrix<double,3,1,Eigen::DontAlign> sunPos_;
 
 };
 
