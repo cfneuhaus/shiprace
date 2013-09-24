@@ -16,6 +16,8 @@ public:
 	void init();
 	void render();
 private:
+	void doPhysics(double dt);
+
 	int winWidth_;
 	int winHeight_;
 

@@ -5,14 +5,19 @@
 #include <Eigen/Core>
 #include <vector>
 #include "Shader.h"
+#include "Camera.h"
+
+class Sky;
 
 class Water
 {
 public:
 	Water(int surfaceSize, double sizePerCell);
-	void render();
+	void render(const Camera& cam);
 	virtual void update(double dt);
 	virtual double computeHeightAtXY(const Eigen::Vector2d& pos) const;
+
+	void setReflection(const Sky& sky) { reflectedSky_=&sky; }
 protected:
 	void updateGeometry();
 
@@ -33,6 +38,14 @@ protected:
 
 
 	std::unique_ptr<Shader> shader_;
+	GLuint tex_glow;
+	GLuint tex_sky;
+	GLuint tex_stars;
+	GLuint tex_detailWaves;
+
+
+	const Sky* reflectedSky_;
+
 
 };
 

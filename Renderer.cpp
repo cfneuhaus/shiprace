@@ -88,6 +88,7 @@ void Renderer::init()
 	}
 
 	sky_.reset(new Sky);
+	water_->setReflection(*sky_.get());
 }
 //-----------------------------------------------------------------------------
 void Renderer::processCameraInput(double dt)
@@ -175,6 +176,18 @@ void Renderer::resolveCollisions()
 
 }
 //-----------------------------------------------------------------------------
+void Renderer::doPhysics(double dt)
+{
+	processCameraInput(dt);
+	processShipInput(dt);
+
+	ship_->swim(*water_.get(),dt);
+	for (size_t i=0;i<buoys_.size();i++)
+		buoys_[i]->swim(*water_.get(),dt);
+
+	resolveCollisions();
+}
+//-----------------------------------------------------------------------------
 void Renderer::render()
 {
 	const double currentTime = glfwGetTime();
@@ -184,16 +197,6 @@ void Renderer::render()
 
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
-	processCameraInput(dt);
-	processShipInput(dt);
-
-	ship_->swim(*water_.get(),dt);
-	for (size_t i=0;i<buoys_.size();i++)
-		buoys_[i]->swim(*water_.get(),dt);
-
-	resolveCollisions();
-
-
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	my_gluPerspective(85, float(winWidth_)/float(winHeight_), 0.1, 200.0);
@@ -202,16 +205,18 @@ void Renderer::render()
 
 	my_gluLookAt(cam_.getPos(), cam_.getLookAt(), cam_.getUp());
 
+	doPhysics(dt);
+
+	// actual rendering
+
 	sky_->update(dt);
 	sky_->render();
 
 
-	glColor3f(1,1,1);
 	render_coordinateAxes(1);
-	glColor3f(1,1,1);
 	//glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 	water_->update(dt);
-	water_->render();
+	water_->render(cam_);
 	//glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 
 	ship_->render();

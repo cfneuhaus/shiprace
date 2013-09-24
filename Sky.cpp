@@ -1,7 +1,6 @@
 #include "Sky.h"
+#include "TextureLoader.h"
 #include <iostream>
-#include <IL/il.h>
-
 
 class SolidSphere
 {
@@ -73,45 +72,6 @@ public:
 	}
 };
 
-GLuint loadTexture(const std::string& name)
-{
-
-	ilInit();
-
-	GLuint texId;
-	glGenTextures(1, &texId);
-
-	ILuint ilId;
-	ilGenImages(1, &ilId);
-
-	// DevIL-Bild Name binden
-	ilBindImage(ilId);
-	ilEnable(IL_ORIGIN_SET);
-	ilOriginFunc(IL_ORIGIN_LOWER_LEFT);
-
-	if (!ilLoadImage(name.c_str()))
-	{
-		return 0;
-	}
-	// Bild in RGBA umwandeln
-	ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
-	glActiveTexture(GL_TEXTURE0);
-	// OpenGL Texture erstellen und laden
-	glBindTexture(GL_TEXTURE_2D, texId);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0, GL_RGBA, GL_UNSIGNED_BYTE, ilGetData());
-
-	ilDeleteImage(ilId);
-
-	return texId;
-}
-
 //-----------------------------------------------------------------------------
 Sky::Sky() : Entity("bla")
 {
@@ -124,6 +84,7 @@ Sky::Sky() : Entity("bla")
 
 	timeOfDay_=19;
 	secPerH_=2;
+	update(0);
 }
 //-----------------------------------------------------------------------------
 void Sky::setTimeOfDay(double t)

@@ -1,11 +1,17 @@
 #include "Water.h"
+#include "Sky.h"
 #include <Eigen/Geometry>
 
 #include <GL/glew.h>
 #include <GL/glfw.h>
 
+#include "TextureLoader.h"
+
 //-----------------------------------------------------------------------------
-Water::Water(int surfaceSize, double sizePerCell) : surfaceSize_(surfaceSize), sizePerCell_(sizePerCell)
+Water::Water(int surfaceSize, double sizePerCell)
+	:
+	  surfaceSize_(surfaceSize), sizePerCell_(sizePerCell),
+	  reflectedSky_(nullptr)
 {
 	numVertices_=surfaceSize_*surfaceSize_;
 	numFaces_=(surfaceSize_-1)*(surfaceSize_-1)*2;
@@ -13,6 +19,14 @@ Water::Water(int surfaceSize, double sizePerCell) : surfaceSize_(surfaceSize), s
 	initGeometry();
 
 	shader_.reset(new Shader("Shader/water.vert","Shader/water.frag"));
+
+	tex_glow=loadTexture("Shader/glow.png");
+	tex_sky=loadTexture("Shader/sky.png");
+
+	tex_stars=loadTexture("Shader/stars2.png");
+
+	tex_detailWaves=loadTexture("Shader/waves_n.png",GL_REPEAT);
+
 }
 //-----------------------------------------------------------------------------
 double Water::computeHeightAtXY(const Eigen::Vector2d& pos) const
@@ -91,7 +105,10 @@ void Water::computeNormals()
 		Eigen::Vector3f b=vertices_[indices_[i+1]];
 		Eigen::Vector3f c=vertices_[indices_[i+2]];
 
-		normals_[i/3]+=(b-a).cross(c-a);;
+		Eigen::Vector3f n=-(b-a).cross(c-a).normalized();
+		normals_[indices_[i+0]]+=n;
+		normals_[indices_[i+1]]+=n;
+		normals_[indices_[i+2]]+=n;
 	}
 	for (int i=0;i<numVertices_;i++)
 		normals_[i]=normals_[i].normalized();
@@ -116,17 +133,54 @@ void Water::updateGeometry()
 	glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * numVertices_ * 3,sizeof(float) * numVertices_ * 3, &normals_[0].x());
 }
 //-----------------------------------------------------------------------------
-void Water::render()
+void Water::render(const Camera& cam)
 {
 	glUseProgram(shader_->handle());
+
+	int loc;
+	if ((loc = glGetUniformLocationARB(shader_->handle(), "glow")) >= 0)
+		glUniform1iARB(loc, 0);
+	if ((loc = glGetUniformLocationARB(shader_->handle(), "color")) >= 0)
+		glUniform1iARB(loc, 1);
+	if ((loc = glGetUniformLocationARB(shader_->handle(), "stars")) >= 0)
+		glUniform1iARB(loc, 2);
+	if ((loc = glGetUniformLocationARB(shader_->handle(), "detailWaves")) >= 0)
+		glUniform1iARB(loc, 3);
+
+	glActiveTexture( GL_TEXTURE0 );
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, tex_glow);
+	glActiveTexture( GL_TEXTURE1 );
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, tex_sky);
+	glActiveTexture( GL_TEXTURE2 );
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, tex_stars);
+	glActiveTexture( GL_TEXTURE3 );
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, tex_detailWaves);
+
+	const Eigen::Vector3d sunPos=reflectedSky_->getSunPos();
+
+	if ((loc = glGetUniformLocationARB(shader_->handle(),"lightPos")) >= 0)
+		glUniform3fARB(loc, sunPos.x(),sunPos.y(),sunPos.z());
+
+	if ((loc = glGetUniformLocationARB(shader_->handle(),"eyePos")) >= 0)
+		glUniform3fARB(loc, cam.getPos().x(),cam.getPos().y(),cam.getPos().z());
+
+	double time=glfwGetTime();
+
+	if ((loc = glGetUniformLocationARB(shader_->handle(),"time")) >= 0)
+		glUniform1fARB(loc, time);
+
 
 	//glBindVertexArray(vertexVBO_);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexVBO_);
 
 	glEnableClientState(GL_NORMAL_ARRAY);
 	glEnableClientState(GL_VERTEX_ARRAY);
-	glVertexPointer(3, GL_FLOAT, sizeof(GLfloat)*3, NULL);
-	glNormalPointer(GL_FLOAT,sizeof(GLfloat)*3,(void*)(numVertices_ * 3));
+	glVertexPointer(3, GL_FLOAT, 0, NULL);
+	glNormalPointer(GL_FLOAT,0,(void*)(sizeof(float) * numVertices_ * 3));
 
 	//glBufferData(GL_ARRAY_BUFFER, sizeof(float) * glui_numVertices * 3, v_p_vertices, GL_STATIC_DRAW);
 	//glEnableVertexAttribArray(SHADER_POSITION_LOC);
@@ -144,6 +198,14 @@ void Water::render()
 
 	glUseProgram(0);
 
+	glActiveTexture( GL_TEXTURE3 );
+	glDisable(GL_TEXTURE_2D);
+	glActiveTexture( GL_TEXTURE2 );
+	glDisable(GL_TEXTURE_2D);
+	glActiveTexture( GL_TEXTURE1 );
+	glDisable(GL_TEXTURE_2D);
+	glActiveTexture( GL_TEXTURE0 );
+	glDisable(GL_TEXTURE_2D);
 }
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
