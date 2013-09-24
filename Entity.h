@@ -5,6 +5,7 @@
 #include <string>
 #include <Eigen/Core>
 #include "Mesh.h"
+#include "Shader.h"
 
 class Entity
 {
@@ -36,6 +37,8 @@ protected:
 	Eigen::Matrix<double,4,4,Eigen::DontAlign> transform_;
 
 	std::unique_ptr<Mesh> model_;
+
+	std::unique_ptr<Shader> shader_;
 
 };
 

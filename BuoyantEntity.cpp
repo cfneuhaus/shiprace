@@ -21,6 +21,14 @@ void BuoyantEntity::swim(const Water& water, double dt)
 //-----------------------------------------------------------------------------
 void BuoyantEntity::render()
 {
+	glUseProgram(shader_->handle());
+
+	Eigen::Vector3d sunPos_;
+	sunPos_ << 0.1,0,0.9;
+	int loc;
+	if ((loc = glGetUniformLocationARB(shader_->handle(),"lightPos")) >= 0)
+		glUniform3fARB(loc, sunPos_.x(),sunPos_.y(),sunPos_.z());
+
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glMultMatrixd(&transform_(0,0));
@@ -28,5 +36,7 @@ void BuoyantEntity::render()
 	glMultMatrixd(&preTransform_(0,0));
 	model_->Render();
 	glPopMatrix();
+
+	glUseProgram(0);
 }
 //-----------------------------------------------------------------------------
