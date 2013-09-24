@@ -7,6 +7,7 @@
 #include "Mesh.h"
 #include "Entity.h"
 #include "BuoyantEntity.h"
+#include "Sky.h"
 
 class Renderer
 {
@@ -31,6 +32,8 @@ private:
 	std::vector<std::unique_ptr<BuoyantEntity> > buoys_;
 
 	std::unique_ptr<BuoyantEntity> ship_;
+
+	std::unique_ptr<Sky> sky_;
 
 
 };

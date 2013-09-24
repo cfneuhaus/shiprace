@@ -9,6 +9,7 @@
 class Entity
 {
 public:
+	Entity();
 	Entity(const std::string& objectName, const Eigen::Matrix4d& preTransform=Eigen::Matrix4d::Identity());
 
 	void setCollisionModel(double mass, double radius);

@@ -30,6 +30,34 @@ void render_coordinateAxes(double size)
 	glDisable(GL_BLEND);
 	glDisable(GL_LINE_SMOOTH);
 }
+void my_gluPerspective( GLdouble fovY, GLdouble aspect, GLdouble zNear, GLdouble zFar )
+{
+	const GLdouble pi = 3.1415926535897932384626433832795;
+	GLdouble fW, fH;
+	fH = tan( (fovY / 2) / 180 * pi ) * zNear;
+	fH = tan( fovY / 360 * pi ) * zNear;
+	fW = fH * aspect;
+	glFrustum( -fW, fW, -fH, fH, zNear, zFar );
+}
+void my_gluLookAt(const Eigen::Vector3d& eye, const Eigen::Vector3d& center, const Eigen::Vector3d& up)
+{
+	const Eigen::Vector3d fw=(center-eye).normalized();
+
+	const Eigen::Vector3d side=fw.cross(up).normalized();
+
+	const Eigen::Vector3d newup=side.cross(fw);
+
+	Eigen::Matrix4d m=Eigen::Matrix4d::Identity();
+	m.block<1,3>(0,0)=side;
+	m.block<1,3>(1,0)=newup;
+	m.block<1,3>(2,0)=-fw;
+
+	Eigen::Matrix4d transf=Eigen::Matrix4d::Identity();
+	transf.block<3,1>(0,3)=-eye;
+	m=m*transf;
+
+	glMultMatrixd(&m(0,0));
+}
 }
 
 
@@ -58,6 +86,8 @@ void Renderer::init()
 		buoys_[i].reset(new BuoyantEntity("Assets/Mesh/cube.obj"));
 		buoys_[i]->setPos(Eigen::Vector3d(rand()/float(RAND_MAX)*30-15,rand()/float(RAND_MAX)*30-15,0));
 	}
+
+	sky_.reset(new Sky);
 }
 //-----------------------------------------------------------------------------
 void Renderer::processCameraInput(double dt)
@@ -166,13 +196,13 @@ void Renderer::render()
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(85, float(winWidth_)/float(winHeight_), 0.1, 200.0);
+	my_gluPerspective(85, float(winWidth_)/float(winHeight_), 0.1, 200.0);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	gluLookAt(cam_.getPos().x(), cam_.getPos().y(), cam_.getPos().z(),
-			  cam_.getLookAt().x(), cam_.getLookAt().y(), cam_.getLookAt().z(),
-			  cam_.getUp().x(), cam_.getUp().y(), cam_.getUp().z());
+	my_gluLookAt(cam_.getPos(), cam_.getLookAt(), cam_.getUp());
+
+	sky_->render();
 
 
 	glColor3f(1,1,1);
