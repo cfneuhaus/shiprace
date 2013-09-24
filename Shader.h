@@ -10,10 +10,9 @@ class Shader
 public:
 	Shader(const std::string& vs, const std::string& fs);
 
-	void checkLog(GLhandleARB handle);
+	void checkLog(const std::string& src, GLhandleARB handle);
 
 	GLhandleARB handle() { return prog; }
-
 
 private:
 	GLhandleARB vert;
