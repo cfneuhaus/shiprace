@@ -202,16 +202,17 @@ void Renderer::render()
 
 	my_gluLookAt(cam_.getPos(), cam_.getLookAt(), cam_.getUp());
 
+	sky_->update(dt);
 	sky_->render();
 
 
 	glColor3f(1,1,1);
 	render_coordinateAxes(1);
 	glColor3f(1,1,1);
-	glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+	//glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 	water_->update(dt);
 	water_->render();
-	glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+	//glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 
 	ship_->render();
 

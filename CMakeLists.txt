@@ -38,7 +38,7 @@ add_executable(${PROJECT_NAME} ${SOURCES} ${HEADER} ${VERTEXSHADER} ${FRAGMENTSH
 
 
 if(NOT APPLE)
-target_link_libraries (${PROJECT_NAME}  IL ${GLEW_LIBRARY} GL glfw2 ${ASSIMP_LIBRARIES} boost_system GLU)
+target_link_libraries (${PROJECT_NAME}  IL ${GLEW_LIBRARY} GL glfw2 ${ASSIMP_LIBRARIES} boost_system GLU IL)
 ENDIF()
 
 

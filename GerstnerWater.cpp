@@ -61,6 +61,8 @@ void GerstnerWater::evalGerstner()
 	for (int y=(-1)*(surfaceSize_ / 2) + 1; y <= (surfaceSize_ / 2); y++)
 		for (int x=(-1)*(surfaceSize_ / 2) + 1; x <= (surfaceSize_ / 2); x++)
 			vertices_[i++]=evalGerstnerAtPoint(Eigen::Vector2d(x,y)).cast<float>();
+
+	computeNormals();
 }
 //-----------------------------------------------------------------------------
 void GerstnerWater::updateGerstner(double dt)

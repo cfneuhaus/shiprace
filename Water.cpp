@@ -1,4 +1,5 @@
 #include "Water.h"
+#include <Eigen/Geometry>
 
 #include <GL/glew.h>
 #include <GL/glfw.h>
@@ -11,8 +12,7 @@ Water::Water(int surfaceSize, double sizePerCell) : surfaceSize_(surfaceSize), s
 
 	initGeometry();
 
-//	if (glb_normals == true) initiateNormals();
-//	if (glb_texCoord == true) initiateTextureCoodrinates();
+	shader_.reset(new Shader("Shader/water.vert","Shader/water.frag"));
 }
 //-----------------------------------------------------------------------------
 double Water::computeHeightAtXY(const Eigen::Vector2d& pos) const
@@ -38,6 +38,7 @@ double Water::computeHeightAtXY(const Eigen::Vector2d& pos) const
 void Water::initGeometry()
 {
 	vertices_.resize(numVertices_);
+	normals_.resize(numVertices_);
 
 	// Generiere Vertices einer planaren Wasseroberfläche in der x-y-Ebene
 	{
@@ -48,7 +49,10 @@ void Water::initGeometry()
 
 		glGenBuffers(1, &vertexVBO_);
 		glBindBuffer(GL_ARRAY_BUFFER, vertexVBO_);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * numVertices_ * 3, &vertices_[0].x(), GL_STATIC_DRAW);
+		// allocate space for vertices+normals
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * numVertices_ * 3 * 2, 0, GL_STATIC_DRAW);
+		// update just vertices
+		glBufferSubData(GL_ARRAY_BUFFER, 0,sizeof(float) * numVertices_ * 3, &vertices_[0].x());//, GL_STATIC_DRAW);
 	}
 
 
@@ -73,6 +77,24 @@ void Water::initGeometry()
 	glGenBuffers(1, &indexVBO_);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexVBO_);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_.size() * sizeof(unsigned int), &indices_[0], GL_STATIC_DRAW);
+
+	computeNormals();
+}
+//-----------------------------------------------------------------------------
+void Water::computeNormals()
+{
+	for (int i=0;i<numVertices_;i++)
+		normals_[i]=Eigen::Vector3f::Zero();
+	for (size_t i=0;i<indices_.size();i+=3)
+	{
+		Eigen::Vector3f a=vertices_[indices_[i+0]];
+		Eigen::Vector3f b=vertices_[indices_[i+1]];
+		Eigen::Vector3f c=vertices_[indices_[i+2]];
+
+		normals_[i/3]+=(b-a).cross(c-a);;
+	}
+	for (int i=0;i<numVertices_;i++)
+		normals_[i]=normals_[i].normalized();
 }
 //-----------------------------------------------------------------------------
 void Water::update(double dt)
@@ -90,16 +112,21 @@ void Water::update(double dt)
 void Water::updateGeometry()
 {
 	glBindBuffer(GL_ARRAY_BUFFER, vertexVBO_);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * numVertices_ * 3, &vertices_[0].x(), GL_STATIC_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0,sizeof(float) * numVertices_ * 3, &vertices_[0].x());
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * numVertices_ * 3,sizeof(float) * numVertices_ * 3, &normals_[0].x());
 }
 //-----------------------------------------------------------------------------
 void Water::render()
 {
+	glUseProgram(shader_->handle());
+
 	//glBindVertexArray(vertexVBO_);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexVBO_);
 
+	glEnableClientState(GL_NORMAL_ARRAY);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glVertexPointer(3, GL_FLOAT, sizeof(GLfloat)*3, NULL);
+	glNormalPointer(GL_FLOAT,sizeof(GLfloat)*3,(void*)(numVertices_ * 3));
 
 	//glBufferData(GL_ARRAY_BUFFER, sizeof(float) * glui_numVertices * 3, v_p_vertices, GL_STATIC_DRAW);
 	//glEnableVertexAttribArray(SHADER_POSITION_LOC);
@@ -109,9 +136,14 @@ void Water::render()
 	glDrawElements(GL_TRIANGLES,indices_.size(),GL_UNSIGNED_INT,(void*)0);
 
 	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_NORMAL_ARRAY);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ARRAY_BUFFER,0);
+
+
+	glUseProgram(0);
+
 }
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
