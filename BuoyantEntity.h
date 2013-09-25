@@ -17,6 +17,8 @@ public:
 
 	Eigen::Matrix<double,4,4,Eigen::DontAlign> bobbingTransform_;
 	double animTime_;
+
+	double randomAnimOffset_;
 };
 
 #endif

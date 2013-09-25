@@ -84,7 +84,13 @@ void Renderer::init()
 	buoys_.resize(10);
 	for (size_t i=0;i<buoys_.size();i++)
 	{
-		buoys_[i].reset(new BuoyantEntity("Assets/Mesh/cube.obj"));
+
+		Eigen::Matrix4d pre=Eigen::Matrix4d::Identity();
+		pre.block<3,3>(0,0)/=100;
+		pre(2,3)=-0.35;
+
+		//buoys_[i].reset(new BuoyantEntity("Assets/Mesh/cube.obj"));
+		buoys_[i].reset(new BuoyantEntity("Assets/buoy/Buoy.3DS",pre));
 		buoys_[i]->setPos(Eigen::Vector3d(rand()/float(RAND_MAX)*30-15,rand()/float(RAND_MAX)*30-15,0));
 	}
 
