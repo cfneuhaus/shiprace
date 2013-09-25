@@ -58,8 +58,8 @@ void GerstnerWater::evalGerstner()
 {
 	int i = 0;
 
-	for (int y=(-1)*(surfaceSize_ / 2) + 1; y <= (surfaceSize_ / 2); y++)
-		for (int x=(-1)*(surfaceSize_ / 2) + 1; x <= (surfaceSize_ / 2); x++)
+	for (int y=(-1)*(surfaceSize_ / 2); y < (surfaceSize_ / 2); y++)
+		for (int x=(-1)*(surfaceSize_ / 2); x < (surfaceSize_ / 2); x++)
 			vertices_[i++]=evalGerstnerAtPoint(Eigen::Vector2d(x,y)).cast<float>();
 
 	computeNormals();

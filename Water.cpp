@@ -7,6 +7,8 @@
 
 #include "TextureLoader.h"
 
+#include <iostream>
+
 //-----------------------------------------------------------------------------
 Water::Water(int surfaceSize, double sizePerCell)
 	:
@@ -15,6 +17,12 @@ Water::Water(int surfaceSize, double sizePerCell)
 {
 	numVertices_=surfaceSize_*surfaceSize_;
 	numFaces_=(surfaceSize_-1)*(surfaceSize_-1)*2;
+
+	// skirt
+	// es gibt 4*surfaceSize-3 borderPunkte
+	// es gibt 3 skirt reihen
+	numVertices_+=(4*surfaceSize-3)*3;
+	numFaces_+=6*(4*surfaceSize-3-1);
 
 	initGeometry();
 
@@ -56,19 +64,55 @@ void Water::initGeometry()
 	vertices_.resize(numVertices_);
 	normals_.resize(numVertices_);
 
+	std::vector<int> borderIndices;
+	std::vector<int> outerBorderIndices;
+	std::vector<int> outerBorderIndices2;
+	std::vector<int> outerBorderIndices3;
+
 	// Generiere Vertices einer planaren Wasseroberfläche in der x-y-Ebene
 	{
 		int i=0;
-		for(int y=(-1)*(surfaceSize_ / 2) + 1; y <= (surfaceSize_ / 2); y++)
-			for (int x=(-1)*(surfaceSize_ / 2) + 1; x <= (surfaceSize_ / 2); x++)
+		for(int y=(-1)*(surfaceSize_ / 2); y < (surfaceSize_ / 2); y++)
+			for (int x=(-1)*(surfaceSize_ / 2); x < (surfaceSize_ / 2); x++)
 				vertices_[i++] << x * sizePerCell_, y * sizePerCell_, 0;
+
+
+		// Generate Skirt!
+		//  generate list of border points
+		for (int kk=0;kk<surfaceSize_;kk++)
+			borderIndices.push_back(kk);
+		for (int kk=2*surfaceSize_-1;kk<=surfaceSize_*surfaceSize_-1;kk+=surfaceSize_)
+			borderIndices.push_back(kk);
+		for (int kk=surfaceSize_*surfaceSize_-2;kk>=surfaceSize_*(surfaceSize_-1);kk--)
+			borderIndices.push_back(kk);
+		for (int kk=(surfaceSize_-2)*surfaceSize_;kk>=0;kk-=surfaceSize_)
+			borderIndices.push_back(kk);
+
+
+		for (size_t k=0;k<borderIndices.size();k++)
+		{
+			vertices_[i]=vertices_[borderIndices[k]]*1.1;
+			vertices_[i].z()=0;
+			outerBorderIndices.push_back(i);
+			i++;
+
+			vertices_[i]=vertices_[borderIndices[k]]*1.2;
+			vertices_[i].z()=0;
+			outerBorderIndices2.push_back(i);
+			i++;
+
+			vertices_[i]=vertices_[borderIndices[k]]*10;
+			vertices_[i].z()=0;
+			outerBorderIndices3.push_back(i);
+			i++;
+		}
 
 		glGenBuffers(1, &vertexVBO_);
 		glBindBuffer(GL_ARRAY_BUFFER, vertexVBO_);
 		// allocate space for vertices+normals
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * numVertices_ * 3 * 2, 0, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices_.size() * 3 * 2, 0, GL_STATIC_DRAW);
 		// update just vertices
-		glBufferSubData(GL_ARRAY_BUFFER, 0,sizeof(float) * numVertices_ * 3, &vertices_[0].x());//, GL_STATIC_DRAW);
+		glBufferSubData(GL_ARRAY_BUFFER, 0,sizeof(float) * vertices_.size() * 3, &vertices_[0].x());//, GL_STATIC_DRAW);
 	}
 
 
@@ -90,6 +134,41 @@ void Water::initGeometry()
 		}
 	}
 
+
+	// Generate Skirt Indices
+	for (size_t x=0; x+1 < borderIndices.size(); x++)
+	{
+		indices_[i++]=borderIndices[x];
+		indices_[i++]=borderIndices[x+1];
+		indices_[i++]=outerBorderIndices[x];
+
+		indices_[i++]=borderIndices[x+1];
+		indices_[i++]=outerBorderIndices[x+1];
+		indices_[i++]=outerBorderIndices[x];
+	}
+	for (size_t x=0; x+1 < borderIndices.size(); x++)
+	{
+		indices_[i++]=outerBorderIndices[x];
+		indices_[i++]=outerBorderIndices[x+1];
+		indices_[i++]=outerBorderIndices2[x];
+
+		indices_[i++]=outerBorderIndices[x+1];
+		indices_[i++]=outerBorderIndices2[x+1];
+		indices_[i++]=outerBorderIndices2[x];
+
+	}
+	for (size_t x=0; x+1 < borderIndices.size(); x++)
+	{
+		indices_[i++]=outerBorderIndices2[x];
+		indices_[i++]=outerBorderIndices2[x+1];
+		indices_[i++]=outerBorderIndices3[x];
+
+		indices_[i++]=outerBorderIndices2[x+1];
+		indices_[i++]=outerBorderIndices3[x+1];
+		indices_[i++]=outerBorderIndices3[x];
+
+	}
+
 	glGenBuffers(1, &indexVBO_);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexVBO_);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_.size() * sizeof(unsigned int), &indices_[0], GL_STATIC_DRAW);
@@ -99,7 +178,7 @@ void Water::initGeometry()
 //-----------------------------------------------------------------------------
 void Water::computeNormals()
 {
-	for (int i=0;i<numVertices_;i++)
+	for (size_t i=0;i<vertices_.size();i++)
 		normals_[i]=Eigen::Vector3f::Zero();
 	for (size_t i=0;i<indices_.size();i+=3)
 	{
@@ -112,7 +191,7 @@ void Water::computeNormals()
 		normals_[indices_[i+1]]+=n;
 		normals_[indices_[i+2]]+=n;
 	}
-	for (int i=0;i<numVertices_;i++)
+	for (int i=0;i<vertices_.size();i++)
 		normals_[i]=normals_[i].normalized();
 }
 //-----------------------------------------------------------------------------
@@ -131,8 +210,8 @@ void Water::update(double dt)
 void Water::updateGeometry()
 {
 	glBindBuffer(GL_ARRAY_BUFFER, vertexVBO_);
-	glBufferSubData(GL_ARRAY_BUFFER, 0,sizeof(float) * numVertices_ * 3, &vertices_[0].x());
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * numVertices_ * 3,sizeof(float) * numVertices_ * 3, &normals_[0].x());
+	glBufferSubData(GL_ARRAY_BUFFER, 0,sizeof(float) * vertices_.size() * 3, &vertices_[0].x());
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * vertices_.size() * 3,sizeof(float) * vertices_.size() * 3, &normals_[0].x());
 }
 //-----------------------------------------------------------------------------
 void Water::render(const Camera& cam)
@@ -187,7 +266,7 @@ void Water::render(const Camera& cam)
 	glEnableClientState(GL_NORMAL_ARRAY);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glVertexPointer(3, GL_FLOAT, 0, NULL);
-	glNormalPointer(GL_FLOAT,0,(void*)(sizeof(float) * numVertices_ * 3));
+	glNormalPointer(GL_FLOAT,0,(void*)(sizeof(float) * vertices_.size() * 3));
 
 	//glBufferData(GL_ARRAY_BUFFER, sizeof(float) * glui_numVertices * 3, v_p_vertices, GL_STATIC_DRAW);
 	//glEnableVertexAttribArray(SHADER_POSITION_LOC);
@@ -201,7 +280,6 @@ void Water::render(const Camera& cam)
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ARRAY_BUFFER,0);
-
 
 	glUseProgram(0);
 

@@ -36,7 +36,6 @@ protected:
 	unsigned int vertexVBO_;
 	unsigned int indexVBO_;
 
-
 	std::unique_ptr<Shader> shader_;
 	GLuint tex_glow;
 	GLuint tex_sky;
